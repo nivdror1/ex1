@@ -1,6 +1,7 @@
 
 #include <unistd.h>
 #include <iostream>
+#include <fstream>
 #include <sys/time.h>
 #include "osm.h"
 
@@ -35,7 +36,68 @@ int osm_finalizer(){
    returns time in nano-seconds upon success,
    and -1 upon failure.
    */
-double osm_operation_time(unsigned int iterations);
+double osm_operation_time(unsigned int iterations){
+	struct timeval begin, after,begin1, after1;
+	int a,b,c,d;
+	double assignmentTime, arithmeticTime,time, roundUp;
+	roundUp = iterations % 8;
+
+	//get the time of a assignment
+	gettimeofday(&begin1,NULL);
+	for(int i=0;i<iterations+roundUp;i+=8){
+		a= 1;
+		b=2;
+		c=3;
+		d=4;
+		a= 1;
+		b=2;
+		c=3;
+		d=4;
+	}
+	gettimeofday(&after1,NULL);
+	assignmentTime= ((after.tv_sec-begin.tv_sec)*1000000000) +((after.tv_usec- begin.tv_usec)*1000);
+
+	//get the time of a arithmetic operation
+	gettimeofday(&begin,NULL);
+	for(int i=0;i<iterations+roundUp;i+=8){
+		a= 5+1;
+		b=2-7;
+		c=4+8;
+		d=7-4;
+		a= 5+1;
+		b=2-7;
+		c=4+8;
+		d=7-4;
+	}
+	gettimeofday(&after,NULL);
+	arithmeticTime= ((after.tv_sec-begin.tv_sec)*1000000000) +((after.tv_usec- begin.tv_usec)*1000);
+	//calculate the time for the actual arithmetic operations
+	time =arithmeticTime-assignmentTime;
+	return time/(iterations);
+}
+
+
+void emptyFun(){
+	int a,b,c,d;
+	a= 5+1;
+	b=2-7;
+	c=4+8;
+	d=7-4;
+}
+
+double timeInFunc(){
+	struct timeval begin, after;
+	double timeInFunction;
+	gettimeofday(&begin,NULL);
+	int a,b,c,d;
+	a= 5+1;
+	b=2-7;
+	c=4+8;
+	d=7-4;
+	gettimeofday(&after,NULL);
+	timeInFunction = ((after.tv_sec-begin.tv_sec)*1000000000) +(after.tv_usec- begin.tv_usec)*1000;
+	return timeInFunction;
+}
 
 
 /* Time measurement function for an empty function call.
@@ -45,36 +107,52 @@ double osm_operation_time(unsigned int iterations);
 double osm_function_time(unsigned int iterations){
 	struct timeval begin, after;
 	gettimeofday(&begin,NULL);
-	double time;
-
+	for(int i=0;i<iterations;i++){
+		emptyFun();
+	}
 	gettimeofday(&after,NULL);
-	return time;
+
+	double time= ((after.tv_sec-begin.tv_sec)*1000000000) +(after.tv_usec- begin.tv_usec)*1000;
+	return (time/iterations)-timeInFunc();
 }
 
 
 /* Time measurement function for an empty trap into the operating system.
-   returns time in nano-seconds upon success, 
+   returns time in nano-seconds upon success,
    and -1 upon failure.
    */
-double osm_syscall_time(unsigned int iterations);
+double osm_syscall_time(unsigned int iterations){
+	struct timeval begin, after;
+	gettimeofday(&begin,NULL);
+	for(int i=0;i<iterations;i++){
+		OSM_NULLSYSCALL;
+	}
+
+	gettimeofday(&after,NULL);
+	double time= ((after.tv_sec-begin.tv_sec)*1000000000) +((after.tv_usec- begin.tv_usec)*1000);
+	return time/iterations;
+}
 
 /* Time measurement function for accessing the disk.
-   returns time in nano-seconds upon success, 
+   returns time in nano-seconds upon success,
    and -1 upon failure.
    */
-double osm_disk_time(unsigned int iterations);
+double osm_disk_time(unsigned int iterations){
+	struct timeval begin, after;
+	gettimeofday(&begin,NULL);
+	for(int i=0;i<iterations;i++){
+		std::ifstream file;
+		file.open("temp" + i);
+	}
+	gettimeofday(&after,NULL);
 
+	for(int i=0;i<iterations;i++){
+		remove("temp" + i);
+	}
 
-typedef struct {
-	char* machineName; //Machine name. check man 2 gethostname.
-	double instructionTimeNanoSecond; //Instruction time - in nano-seconds
-	double functionTimeNanoSecond; //function time - in nano second
-	double trapTimeNanoSecond; // Trap time - in nano-seconds.
-	double diskTimeNanoSecond; // Disk time - in nano-seconds.
-	double functionInstructionRatio; //Function/instruction ratio - the respective times divided.
-	double trapInstructionRatio;    //Trap/instruction ratio - the respective times divided.
-	double diskInstructionRatio; // Disk/instruction ratio - the respective times divided.
-} timeMeasurmentStructure;
+	double time = ((after.tv_sec-begin.tv_sec)*1000000000) +((after.tv_usec- begin.tv_usec)*1000);
+	return time/iterations;
+}
 
 timeMeasurmentStructure measureTimes (unsigned int operation_iterations,
                                       unsigned int function_iterations,
