@@ -1,6 +1,7 @@
 #ifndef _OSM_H
 #define _OSM_H
 
+#include <unistd.h>
 
 /* calling a system call that does nothing */
 #define OSM_NULLSYSCALL asm volatile( "int $0x80 " : : \
@@ -13,9 +14,20 @@
  * The function may, for example, allocate memory or
  * create/open files.
  * Pay attention: this function may be empty for some desings. It's fine.
- * Returns 0 uppon success and -1 on failure
+ * Returns 0 upon success and -1 on failure
  */
-int osm_init();
+int osm_init(){
+	try{
+		timeMeasurmentStructure time= new timeMeasurmentStructure();
+		if(getHostname(time.machineName,255)==-1){
+			std::cout<<"bad host name"<<endl; //todo check out what to do
+		}
+		return 0;
+	}catch (std::bad_alloc e){
+		e.printstack();
+		return -1;
+	}
+}
 
 
 /* finalizer function that the user must call
