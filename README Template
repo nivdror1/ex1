@@ -1,5 +1,5 @@
-nivdror1, login2
-niv dror (305498198), Student Name2 (ID2)
+nivdror1, ido.shachar
+niv dror (305498198), Ido Shachar (311248355)
 EX: 1
 
 FILES:
@@ -23,8 +23,8 @@ if there were such questions in the exercise.
 
 Task1:
 
-the program create two folders and a file, it opens the file and writes a sequence of spaces into it.
-then it closes the file and deletes the two folders.
+The program create two folders and a file, it opens the file and writes a sequence of spaces into it.
+Then it closes the file and deletes the two folders.
 
 mkdir - try and succeed at making a directory called "welcome" and giving all the permissions
 		to the owner user and to the owner's user group but withholding the write permissions
@@ -60,3 +60,28 @@ rmdir - deleting the folder "welcome" which is an empty folder,
 
 exit_group - exit all of the threads in the process
 			 when the parameter specifies: status  - if the process was a success or failure
+
+
+Task2:
+
+The first decision we made is how to test the operation time, The problem was that when we do an
+empty arithmetic operation like 4+4, without assign the result anywhere, the compiler ignored
+this instruction.
+We decide to assign the result of the operation in a dummy variable, because when we do an
+assignment the compiler has to execute the instruction. As we see in nand, the cost of the
+assignment (after all the calculations were done) is suppose to be only one pop action on
+the stack so we can ignore it.
+We use loop unrolling as we advised.
+
+The second decision is how to test function call and return time. Once again, if the function is
+totally empty the compiler will notice that and ignore it.
+We decide to fill the function with some arbitrary commands so that the compiler has to execute
+the function, then we calculate the time it takes to execute the commands in the function and
+subtract this value from the time we get on execute the function, this outcome is the time it
+takes to call and return from the function.
+
+The trap test is trivial, no surprise here.
+
+The last decision we make is how to make sure disk access will occur. The solution we made is to
+use the command "flush" that causes the output to appear in real time. That means the access to
+the disk has to be immediate, like we want.
