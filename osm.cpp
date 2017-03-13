@@ -4,6 +4,7 @@
 #include <fstream>
 #include <sys/time.h>
 #include <libltdl/lt_system.h>
+#include <cstring>
 #include "osm.h"
 
 #define MAX_MACHINE_NAME_CHAR 255
@@ -23,7 +24,11 @@ inline double conversionToNanoSecond(timeval &before, timeval &after){
 	return ((after.tv_sec-before.tv_sec)*SECONDS_TO_NANO_SECONDS)
 	       +((after.tv_usec- before.tv_usec)*MICRO_SECONDS_TO_NANO_SECONDS);
 }
-
+/**
+ * check if the number of iterations is valid if not assign DEFAULT_ITERATIONS
+ * @param iterations the number of iterations
+ * @return if iteration eqaul zero return DEFAULT_ITERATIONS else return iterations
+*/
 inline unsigned int IsIterationsValid(unsigned int iterations){
 	iterations==0?DEFAULT_ITERATIONS:iterations;
 }
@@ -57,6 +62,7 @@ double osm_operation_time(unsigned int iterations){
 	struct timeval before, after;
 	int a,b,c,d;
 	double assignmentTime, arithmeticTime,time, roundUp;
+	int beforeStatus, afterStatus;
 
 	roundUp =  NUM_ARITHMETIC_OPERATIONS- (iterations % NUM_ARITHMETIC_OPERATIONS);
 
@@ -76,7 +82,7 @@ double osm_operation_time(unsigned int iterations){
 //	assignmentTime= ((after.tv_sec-begin.tv_sec)*1000000000) +((after.tv_usec- begin.tv_usec)*1000);
 
 	//get the time of a arithmetic operation
-	gettimeofday(&before,NULL);
+	beforeStatus = gettimeofday(&before,NULL);
 	for(int i=0;i<iterations+roundUp;i+=NUM_ARITHMETIC_OPERATIONS){
 		a= 5+1;
 		b=2-7;
@@ -87,7 +93,10 @@ double osm_operation_time(unsigned int iterations){
 		c=4+8;
 		d=7-4;
 	}
-	gettimeofday(&after,NULL);
+	afterStatus= gettimeofday(&after,NULL);
+	if ((beforeStatus|afterStatus)==-1){ //check for a failure in accessing the time
+		return FAILURE;
+	}
 	arithmeticTime= conversionToNanoSecond(before,after);
 	//calculate the time for the actual arithmetic operations
 	time =arithmeticTime;
@@ -110,13 +119,17 @@ void emptyFun(){
  */
 double timeInFunc(){
 	struct timeval before, after;
-	gettimeofday(&before,NULL);
+	int beforeStatus, afterStatus;
+	beforeStatus = gettimeofday(&before,NULL);
 	int a,b,c,d;
 	a= 5+1;
 	b=2-7;
 	c=4+8;
 	d=7-4;
-	gettimeofday(&after,NULL);
+	afterStatus = gettimeofday(&after,NULL);
+	if ((beforeStatus|afterStatus)==-1){ //check for a failure in accessing the time
+		return FAILURE;
+	}
 	return conversionToNanoSecond(before, after);
 
 }
@@ -128,14 +141,20 @@ double timeInFunc(){
    */
 double osm_function_time(unsigned int iterations){
 	struct timeval before, after;
-	gettimeofday(&before,NULL);
+	int beforeStatus, afterStatus;
+	double funcStatus;
+	beforeStatus = gettimeofday(&before,NULL);
 	for(int i=0;i<iterations;i++){
 		emptyFun();
 	}
-	gettimeofday(&after,NULL);
+	afterStatus= gettimeofday(&after,NULL);
 
+	funcStatus =timeInFunc();
+	if (((beforeStatus|afterStatus)==-1)|funcStatus==-1){ //check for a failure in accessing the time
+		return FAILURE;
+	}
 	double time= conversionToNanoSecond(before, after);
-	return (time/iterations)-timeInFunc();
+	return (time/iterations)-funcStatus;
 }
 
 
@@ -145,12 +164,18 @@ double osm_function_time(unsigned int iterations){
    */
 double osm_syscall_time(unsigned int iterations){
 	struct timeval before, after;
-	gettimeofday(&before,NULL);
+	int beforeStatus, afterStatus;
+
+	beforeStatus = gettimeofday(&before,NULL);
 	//calling the trap system call
 	for(int i=0;i<iterations;i++){
 		OSM_NULLSYSCALL;
 	}
-	gettimeofday(&after,NULL);
+	afterStatus = gettimeofday(&after,NULL);
+
+	if ((beforeStatus|afterStatus)==-1){ //check for a failure in accessing the time
+		return FAILURE;
+	}
 	double time= conversionToNanoSecond(before,after);
 	return time/iterations;
 }
@@ -161,6 +186,7 @@ double osm_syscall_time(unsigned int iterations){
    */
 double osm_disk_time(unsigned int iterations){
 	struct timeval before, after;
+	int beforeStatus, afterStatus;
 	//open a file
 	std::ofstream file;
 	file.exceptions(std::fstream::failbit|std::fstream::badbit);
@@ -168,19 +194,23 @@ double osm_disk_time(unsigned int iterations){
 	try {
 		file.open("temp");
 		//writing nonsense
-		gettimeofday(&before, NULL);
+		beforeStatus = gettimeofday(&before, NULL);
 		for (int i = 0; i < iterations; i++) {
 			file << i << std::flush; //flushing the disk access
 		}
-		gettimeofday(&after, NULL);
+		afterStatus = gettimeofday(&after, NULL);
 
 		//closing and removing
 		file.close();
+
+		if ((beforeStatus|afterStatus)==-1){ //check for a failure in accessing the time
+			return FAILURE;
+		}
 	}catch(std::fstream::failure &e){
-		std::cout<<"exception opening|closing|writing file"<<std::endl;
+		return FAILURE;
 	}
 	if(remove("temp")!=0){
-		std::cout<<"error trying to delete a file"<<std::endl;
+		return FAILURE;
 	}
 
 	double time = conversionToNanoSecond(before,after);
@@ -198,6 +228,7 @@ timeMeasurmentStructure measureTimes (unsigned int operation_iterations,
                                       unsigned int function_iterations,
                                       unsigned int syscall_iterations,
                                       unsigned int disk_iterations){
+	char temp[MAX_MACHINE_NAME_CHAR];
 	//check the iterations input
 	operation_iterations= IsIterationsValid(operation_iterations);
 	function_iterations= IsIterationsValid(function_iterations);
@@ -205,10 +236,7 @@ timeMeasurmentStructure measureTimes (unsigned int operation_iterations,
 	disk_iterations= IsIterationsValid(disk_iterations);
 
 	timeMeasurmentStructure time;
-	time.machineName[MAX_MACHINE_NAME_CHAR];
-	if (gethostname(time.machineName, MAX_MACHINE_NAME_CHAR-1) == FAILURE){
-		std::cout << "Problem" << std::endl;
-	}
+
 	time.functionTimeNanoSecond = osm_function_time(function_iterations);
 	time.instructionTimeNanoSecond = osm_operation_time(operation_iterations);
 	time.trapTimeNanoSecond = osm_syscall_time(syscall_iterations);
@@ -216,6 +244,11 @@ timeMeasurmentStructure measureTimes (unsigned int operation_iterations,
 	time.functionInstructionRatio = time.functionTimeNanoSecond/time.instructionTimeNanoSecond;
 	time.trapInstructionRatio = time.trapTimeNanoSecond/time.instructionTimeNanoSecond;
 	time.diskInstructionRatio = time.diskInstructionRatio/time.instructionTimeNanoSecond;
+	if (gethostname(temp, MAX_MACHINE_NAME_CHAR-1) == FAILURE){
+		time.machineName[0]='\0';
+	} else{
+		strcpy(time.machineName, temp);
+	}
 	return time;
 }
 
