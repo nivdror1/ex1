@@ -1,0 +1,62 @@
+nivdror1, login2
+niv dror (305498198), Student Name2 (ID2)
+EX: 1
+
+FILES:
+myfile.c -- a file with some code
+myfile.h -- a file with some headers
+
+REMARKS:
+These are some remarks that
+I want the graders to know
+about this submission.
+
+ANSWERS:
+
+Q1:
+Here are answers to theoreical questions 
+if there were such questions in the exercise.
+
+Q2:
+Here are answers to theoreical questions 
+if there were such questions in the exercise.
+
+Task1:
+
+the program create two folders and a file, it opens the file and writes a sequence of spaces into it.
+then it closes the file and deletes the two folders.
+
+mkdir - try and succeed at making a directory called "welcome" and giving all the permissions
+		to the owner user and to the owner's user group but withholding the write permissions
+		from the other users.
+
+mkdir - try and succeed at making a directory called "welcome/to" and giving all the permissions
+		to the owner user and to the owner's user group but withholding the write permissions
+		from the other users.
+		
+open -  try and succeed at creating and opening a file called "welcome/to/OS2016" when the flags:
+		-O_WRONLY specifies that "OS2016" will be open just for writing.
+		-O_CREAT specifies that "OS2016" will be created if it doesn't exists
+		-O_TRUNC specifies that "OS2016" allready exists and could be written
+		in addition, it gives permission to read/write but not execute for all users.
+
+fstat - try and succeed getting information about the file named "OS2016".
+
+write - writing 187 chars of spaces to the file "OS2016", when the parameters specifies:
+		fd - the file description id.
+		buf- the string that being written into the file
+		count - the number of chars in the buf.
+
+close - close the file "OS2016" when the parameter fd specifies the file description id.
+
+unlink - trying and succeed at deleting the file "welcome/to/OS2016" from the fileSystem ,
+		 when the parameter specifies: pathname - the path of the file
+
+rmdir - deleting the folder "welcome/to" which is an empty folder,
+		when the parameter specifies: pathname - the path of the folder.
+		
+rmdir - deleting the folder "welcome" which is an empty folder,
+		when the parameter specifies: pathname - the path of the folder.
+
+exit_group - exit all of the threads in the process
+			 when the parameter specifies: status  - if the process was a success or failure
