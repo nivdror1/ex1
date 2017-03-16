@@ -212,39 +212,49 @@ double osm_syscall_time(unsigned int iterations){
 	return time/(iterations+roundUp);
 }
 
+/**
+ * measure disk access time
+ * @param iterations the number of iterations
+ * @param fd the file id
+ * @return the time it took to gain access to the disk
+ */
+double measureDiskAccessTime(unsigned int iterations,int fd){
+	struct timeval before, after;
+	int beforeStatus, afterStatus;
+	//writing nonsense
+	beforeStatus = gettimeofday(&before, NULL);
+	for (unsigned int i = 0; i < iterations; i++) {
+		//writing a single block and closing it in case of failure
+		if(write(fd,::buff,blockSize)==FAILURE){
+			close(fd);
+			remove("/tmp/temp.txt");
+			return FAILURE;
+		}
+	}
+	afterStatus = gettimeofday(&after, NULL);
+	//check for a failure in the closing process
+	if((close(fd))&(remove("/tmp/temp.txt"))!=0){
+		return FAILURE;
+	}
+	//closing and removing
+	if ((beforeStatus | afterStatus) == FAILURE) { //check for a failure in accessing the time
+		return FAILURE;
+	}
+	double time = conversionToNanoSecond(before,after);
+	return time/iterations;
+}
+
 /** Time measurement function for accessing the disk.
    returns time in nano-seconds upon success,
    and -1 upon failure.
    */
 double osm_disk_time(unsigned int iterations){
-	struct timeval before, after;
-	int beforeStatus, afterStatus;
 
 	//open a file
 	int fd=open("/tmp/temp.txt",O_DIRECT|O_SYNC|O_WRONLY|O_CREAT);
 
 	if(fd!=FAILURE) {
-		//writing nonsense
-		beforeStatus = gettimeofday(&before, NULL);
-		for (unsigned int i = 0; i < iterations; i++) {
-			//writing a single block
-			if(write(fd,::buff,blockSize)==FAILURE){
-				close(fd);
-				remove("/tmp/temp.txt");
-				return FAILURE;
-			}
-		}
-		afterStatus = gettimeofday(&after, NULL);
-
-		close(fd);
-		remove("/tmp/temp.txt");
-
-		//closing and removing
-		if ((beforeStatus | afterStatus) == FAILURE) { //check for a failure in accessing the time
-			return FAILURE;
-		}
-		double time = conversionToNanoSecond(before,after);
-		return time/iterations;
+		return measureDiskAccessTime(iterations,fd);
 	}
 	return FAILURE;
 }
