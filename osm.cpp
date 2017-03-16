@@ -37,7 +37,7 @@ inline double conversionToNanoSecond(timeval &before, timeval &after){
  * @return if iteration eqaul zero return DEFAULT_ITERATIONS else return iterations
 */
 inline unsigned int IsIterationsValid(unsigned int iterations){
-	iterations==0?DEFAULT_ITERATIONS:iterations;
+	return iterations==0?DEFAULT_ITERATIONS:iterations;
 }
 
 /** Initialization function that the user must call
@@ -84,27 +84,28 @@ int osm_finalizer(){
    */
 double osm_operation_time(unsigned int iterations){
 	struct timeval before, after;
-	int a,b,c,d;
-	double assignmentTime, arithmeticTime,time, roundUp;
+	double  arithmeticTime,time, roundUp;
 	int beforeStatus, afterStatus;
-
+	int a,b,c,d,e,f,g,h;
 	roundUp =  NUM_OPERATIONS- (iterations % NUM_OPERATIONS);
 
 
 	//get the time of a arithmetic operation
 	beforeStatus = gettimeofday(&before,NULL);
-	for(int i=0;i<iterations+roundUp;i+=NUM_OPERATIONS){
+	for(unsigned int i=0;i<iterations+roundUp;i+=NUM_OPERATIONS){
 		a= 5+1;
 		b=2-7;
 		c=4+8;
 		d=7-4;
-		a= 5+1;
-		b=2-7;
-		c=4+8;
-		d=7-4;
+		e= 5+1;
+		f=2-7;
+		g=4+8;
+		h=7-4;
 	}
 	afterStatus= gettimeofday(&after,NULL);
-	if ((beforeStatus|afterStatus)==-1){ //check for a failure in accessing the time
+	//just avoiding nonsense warning
+	if(a+b+c+d+e+f+g+h==0){};
+	if ((beforeStatus|afterStatus)==FAILURE){ //check for a failure in accessing the time
 		return FAILURE;
 	}
 	arithmeticTime= conversionToNanoSecond(before,after);
@@ -122,6 +123,8 @@ void emptyFun(){
 	b=2-7;
 	c=4+8;
 	d=7-4;
+	//just avoiding nonsense warning
+	if(a+b+c+d==0){};
 }
 /**
  * return the time the arithmetic operation in emptyFun
@@ -136,7 +139,10 @@ double timeInFunc(){
 	b=2-7;
 	c=4+8;
 	d=7-4;
+	//just avoiding nonsense warning
+	if(a+b+c+d==0){};
 	afterStatus = gettimeofday(&after,NULL);
+
 	if ((beforeStatus|afterStatus)==-1){ //check for a failure in accessing the time
 		return FAILURE;
 	}
@@ -155,7 +161,7 @@ double osm_function_time(unsigned int iterations){
 	double funcStatus;
 	int roundUp =  NUM_OPERATIONS- (iterations % NUM_OPERATIONS);
 	beforeStatus = gettimeofday(&before,NULL);
-	for(int i=0;i<iterations+roundUp;i+=NUM_OPERATIONS){
+	for(unsigned int i=0;i<iterations+roundUp;i+=NUM_OPERATIONS){
 		emptyFun();
 		emptyFun();
 		emptyFun();
@@ -167,8 +173,8 @@ double osm_function_time(unsigned int iterations){
 	}
 	afterStatus= gettimeofday(&after,NULL);
 
-	funcStatus =timeInFunc();
-	if (((beforeStatus|afterStatus)==-1)|funcStatus==-1){ //check for a failure in accessing the time
+	funcStatus = timeInFunc();
+	if (((beforeStatus|afterStatus)==-1)|(funcStatus==-1)){ //check for a failure in accessing the time
 		return FAILURE;
 	}
 	double time= conversionToNanoSecond(before, after);
@@ -187,7 +193,7 @@ double osm_syscall_time(unsigned int iterations){
 	int roundUp =  NUM_OPERATIONS- (iterations % NUM_OPERATIONS);
 	beforeStatus = gettimeofday(&before,NULL);
 	//calling the trap system call
-	for(int i=0;i<iterations+roundUp;i+=NUM_OPERATIONS){
+	for(unsigned int i=0;i<iterations+roundUp;i+=NUM_OPERATIONS){
 		OSM_NULLSYSCALL;
 		OSM_NULLSYSCALL;
 		OSM_NULLSYSCALL;
@@ -220,7 +226,7 @@ double osm_disk_time(unsigned int iterations){
 	if(fd!=FAILURE) {
 		//writing nonsense
 		beforeStatus = gettimeofday(&before, NULL);
-		for (int i = 0; i < iterations; i++) {
+		for (unsigned int i = 0; i < iterations; i++) {
 			//writing a single block
 			if(write(fd,::buff,blockSize)==FAILURE){
 				close(fd);

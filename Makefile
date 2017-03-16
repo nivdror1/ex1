@@ -1,6 +1,6 @@
 CPP= g++
 CPPFLAGS= -c -g -Wextra -Wvla -Wall -std=c++11 -DNDEBUG
-
+TAR_FILES= Makefile README osm.cpp
 # All Target
 all: osm
 
@@ -13,6 +13,8 @@ osm: osm.o
 osm.o: osm.h osm.cpp
 	$(CPP) $(CPPFLAGS) osm.cpp -o osm.o
 
+tar:
+	tar cvf ex1.tar $(TAR_FILES)
  
 # Other Targets
 clean:
