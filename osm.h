@@ -27,7 +27,7 @@ int osm_init();
 int osm_finalizer();
 
 
-/* Time measurement function for a simple arithmetic operation.
+/* Time measurement function for a simple arithmstd::cout << "Problem" << std::endl;etic operation.
    returns time in nano-seconds upon success,
    and -1 upon failure.
    */
